@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      =  env("DATABASE_URL")
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Vendor {
+  id                  Int             @unique
+  profile_picture     String?
+  first_name          String
+  last_name           String
+  email               String          @unique
+  phone_number        String
+  business_admin_id   Int
+  status              Status          @default(ACTIVE)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+  business            Business?
+}
+
+model Business {
+  id               Int                  @id @default(autoincrement())
+  name             String?
+  description      String?
+  address          Address?             @relation("BusinessAddress", fields: [address_id], references: [id])
+  address_id       Int?             
+  vendor           Vendor               @relation(fields: [vendor_id], references: [id])
+  vendor_id        Int                  @unique
+  status           Status               @default(ACTIVE)
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+  category         BusinessCategory?    @relation(fields: [category_id], references: [category_id])
+  category_id      Int?
+}
+
+model BusinessCategory {
+  category_id      Int               @id @default(autoincrement())
+  name             String
+  description      String
+  created_at       DateTime          @default(now())
+  updated_at       DateTime?         @updatedAt
+  status           Status            @default(ACTIVE)
+  business         Business[]
+}
+
+model Address {
+  id              Int           @id @default(autoincrement())
+  landmark        String
+  street          String
+  city            String
+  state           String
+  postalCode      String
+  country         String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  business        Business[]    @relation("BusinessAddress")
+}
