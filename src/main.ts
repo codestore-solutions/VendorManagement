@@ -29,7 +29,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(constants.APIS_PREFIX, app, document);
 
-  //Configuring PORT
+  //Configuring PORT 1
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');
   app.useStaticAssets(join(__dirname, 'assets/images'));
