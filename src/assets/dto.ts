@@ -1,0 +1,1 @@
+export type verificationType = 'Verified' | 'Rejected' | 'Pending';
