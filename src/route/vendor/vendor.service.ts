@@ -1,7 +1,11 @@
 // vendor.service.ts
 
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
-import { CreateVendorDto } from './dto/create-vendor.dto';
+import {
+    BankDetails,
+    CompanyInfoDto,
+    CompanyOverview, CreateVendorDto,
+} from './dto/create-vendor.dto';
 import { PRISMA_CLIENT, errorMessages } from 'src/assets/constants';
 import { PrismaClient } from '@prisma/client';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
@@ -13,52 +17,82 @@ export class VendorService {
     constructor(@Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient) { }
     private readonly logger = new Logger(VendorService.name);
 
-    async createVendor(createVendorDto: CreateVendorDto) {
+    async handleCompanyContactInfo(id: number, companyContactInfo: CompanyInfoDto) {
+        await this.prisma.business.update({
+            where: { id },
+            data: {
+                ...companyContactInfo,
+                formStep: 2
+            },
+        });
+    }
+
+    async handleCompanyOverview(id: number, companyOverview: CompanyOverview) {
+        await this.prisma.business.update({
+            where: { id },
+            data: {
+                ...companyOverview,
+                formStep: 3
+            },
+        });
+    }
+
+    async handleDocumentation(id: number, businessRegCert: string,
+        identifyProof: string, addressProof: string, baseUrl: string) {
+        const businessRegCertUrl = baseUrl + '/files/' + businessRegCert;
+        const identifyProofUrl = baseUrl + '/files/' + identifyProof;
+        const addressProofUrl = baseUrl + '/files/' + addressProof;
+        await this.prisma.business.update({
+            where: { id },
+            data: {
+                businessRegCert: businessRegCertUrl,
+                identityProof: identifyProofUrl,
+                addressProof: addressProofUrl,
+                formStep: 4
+            },
+        });
+    }
+
+    async handleBankingInfo(id: number, bankDetails: BankDetails) {
+        await this.prisma.business.update({
+            where: { id },
+            data: {
+                ...bankDetails,
+                formStep: 5
+            },
+        });
+    }
+
+
+    /**--------------Creates vendor--------------- */
+    
+    async createVendorProfile(createVendorDto: CreateVendorDto) {
         try {
             const { firstName, lastName, email,
-                phoneNumber, business_admin_id, vendor_id } = createVendorDto;
+                phoneNumber, businessAdminId, password } = createVendorDto;
 
-            const vendor = await this.prisma.vendor.findFirst({ where: { email: email } })
+            // API must be called here to user management for creating user (email, password)
 
-            if (vendor) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.EMAIL_ALREADY_EXIST,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
+            const vendorId = 99; // it should be fetched from user management 
 
-            await this.prisma.$transaction(async (prisma: PrismaClient) => {
+            await this.prisma.vendor.create({
+                data: {
+                    firstName: firstName,
+                    lastName: lastName,
+                    businessAdminId: businessAdminId,
+                    id: vendorId,
+                    phoneNumber: phoneNumber,
+                    status: 'DETAILS_SUBMISSION_INCOMPLETE',
+                    business: {
+                        create: {
+                            formStep: 1
+                        }
 
-                const vendor = await prisma.vendor.create({
-                    data: {
-                        first_name: firstName,
-                        last_name: lastName,
-                        email: email,
-                        business_admin_id: business_admin_id,
-                        id: vendor_id,
-                        phone_number: phoneNumber,
-                    },
-                });
-
-                await prisma.business.create({
-                    data: {
-                        vendor: {
-                            connect: { id: vendor.id }
-                        },
-                    },
-                });
-            });
+                    }
+                }
+            })
 
         } catch (error) {
-            this.logger.error('An error occurred while creating the vendor and store', error.message);
-            if (errorMessages.EMAIL_ALREADY_EXIST == error.message) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.EMAIL_ALREADY_EXIST,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
             throw new HttpException({
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
                 message: errorMessages.CREATING_VENDOR,
@@ -67,6 +101,107 @@ export class VendorService {
         }
     }
 
+
+    /**--------------Updates company details of vendor--------------- */
+
+    async updateCompanyInfo(id: number, companyInfoDto: CompanyInfoDto) {
+        try {
+            const businessData = await this.prisma.business.findFirst({ where: { id } })
+            if (!businessData) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            await this.handleCompanyContactInfo(id, companyInfoDto);
+        } catch (error) {
+            this.logger.error('An error occurred while updating company details', error.message);
+            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Error creating vendor business',
+                    success: false,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+
+    /**--------------Updates company overview of vendor--------------- */
+
+    async updateCompanyOverview(id: number, companyOverview: CompanyOverview) {
+        try {
+            const businessData = await this.prisma.business.findFirst({ where: { id } })
+            if (!businessData) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            await this.handleCompanyOverview(id, companyOverview);
+        } catch (error) {
+            this.logger.error('An error occurred while updating overview details', error.message);
+            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Error updating vendor business',
+                    success: false,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+
+    /**--------------Updates banking details of vendor--------------- */
+
+    async updateBankingDetails(id: number, bankDetails: BankDetails) {
+        try {
+            const businessData = await this.prisma.business.findFirst({ where: { id } })
+            if (!businessData) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            await this.handleBankingInfo(id, bankDetails);
+        } catch (error) {
+            this.logger.error('An error occurred while updating overview details', error.message);
+            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
+                throw new HttpException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                    success: false
+                }, HttpStatus.BAD_REQUEST);
+            }
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Error updating vendor business',
+                    success: false,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
 
     async getVendorById(id: number) {
         const vendor = await this.prisma.vendor.findUnique({ where: { id } });
@@ -102,7 +237,6 @@ export class VendorService {
         return updatedVendor;
     }
 
-
     async getVendorsByIds(vendorIds: number[]) {
 
         return this.prisma.vendor.findMany({
@@ -110,7 +244,6 @@ export class VendorService {
             include: {
                 business: {
                     include: {
-                        category: true,
                         address: true,
                     },
                 },

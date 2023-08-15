@@ -24,15 +24,15 @@ export class BusinessController {
     // }
 
 
-    @ApiOperation({ summary: 'Update an existing Business' })
-    @ApiOkResponse({ description: 'Business updated successfully.', })
-    @ApiNotFoundResponse({ description: 'Business not found.' })
-    @Put('updateByVendorId/:vendorId')
-    async update(@Param('vendorId', ParseIntPipe) vendorId: number,
-        @Body() updateBusinessDto: UpdateBusinessDto) {
-        await this.BusinessService.updateBusiness(vendorId, updateBusinessDto);
-        return response.BUSINESS_UPDATED_SUCCESSFULLY
-    }
+    // @ApiOperation({ summary: 'Update an existing Business' })
+    // @ApiOkResponse({ description: 'Business updated successfully.', })
+    // @ApiNotFoundResponse({ description: 'Business not found.' })
+    // @Put('updateByVendorId/:vendorId')
+    // async update(@Param('vendorId', ParseIntPipe) vendorId: number,
+    //     @Body() updateBusinessDto: UpdateBusinessDto) {
+    //     await this.BusinessService.updateBusiness(vendorId, updateBusinessDto);
+    //     return response.BUSINESS_UPDATED_SUCCESSFULLY
+    // }
 
 
     // @ApiOperation({ summary: 'Get a Business by ID' })
