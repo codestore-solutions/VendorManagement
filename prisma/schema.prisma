@@ -7,61 +7,81 @@ datasource db {
   url      =  env("DATABASE_URL")
 }
 
+
 enum Status {
   ACTIVE
   INACTIVE
+  DETAILS_SUBMISSION_INCOMPLETE
+  DETAILS_SUBMISSION_COMPLETED
+  REJECTED
 }
+
 
 model Vendor {
   id                  Int             @unique
-  profile_picture     String?
-  first_name          String
-  last_name           String
-  email               String          @unique
-  phone_number        String
-  business_admin_id   Int
+  profilePicture      String?
+  firstName           String
+  lastName            String
+  phoneNumber         String
+  businessAdminId     Int
   status              Status          @default(ACTIVE)
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
-  business            Business?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime?       @updatedAt
+  business            Business?       @relation("VendorBusiness")
 }
+
 
 model Business {
-  id               Int                  @id @default(autoincrement())
-  name             String?
-  description      String?
-  address          Address?             @relation("BusinessAddress", fields: [address_id], references: [id])
-  address_id       Int?             
-  vendor           Vendor               @relation(fields: [vendor_id], references: [id])
-  vendor_id        Int                  @unique
-  status           Status               @default(ACTIVE)
-  created_at       DateTime             @default(now())
-  updated_at       DateTime             @updatedAt
-  category         BusinessCategory?    @relation(fields: [category_id], references: [category_id])
-  category_id      Int?
+  id                  Int                  @id @default(autoincrement())
+  address             Address?             @relation("BusinessAddress", fields: [addressId], references: [id])
+  addressId           Int?             
+  vendor              Vendor               @relation("VendorBusiness", fields: [vendorId], references: [id])
+  vendorId            Int                  @unique
+  businessName        String?
+  mobileNumber        String?
+  email               String?
+  generalDetail       String?
+  dateOfEstablishment DateTime?
+  areaDescription     String?
+  vendorBusinessType  Int?      
+  insured             Boolean?
+  licensed            Boolean?
+  grossAnnualSale     Int?
+  currency            String?
+  bankName            String?
+  beneficiaryName     String?
+  accountNumber       String?
+  businessRegCert     String?
+  identityProof       String?
+  addressProof        String?
+  formStep            Int
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime?            @updatedAt
 }
 
-model BusinessCategory {
-  category_id      Int               @id @default(autoincrement())
-  name             String
-  description      String
-  created_at       DateTime          @default(now())
-  updated_at       DateTime?         @updatedAt
-  status           Status            @default(ACTIVE)
-  business         Business[]
-}
 
 model Address {
   id              Int           @id @default(autoincrement())
   landmark        String
-  street          String
+  street1         String
+  street2         String
   city            String
   state           String
-  postalCode      String
+  zipCode         String
   country         String
   latitude        Float?       
   longitude       Float?
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  updatedAt       DateTime?     @updatedAt
   business        Business[]    @relation("BusinessAddress")
+}
+
+
+model BusinessCategory {
+  categoryId       Int               @id @default(autoincrement())
+  name             String
+  description      String
+  status           Status            @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime?         @updatedAt
 }

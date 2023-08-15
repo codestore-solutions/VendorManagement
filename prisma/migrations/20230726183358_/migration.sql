@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE `business` MODIFY `accountNumber` VARCHAR(191) NULL,
+    MODIFY `addressProof` VARCHAR(191) NULL,
+    MODIFY `areaDescription` VARCHAR(191) NULL,
+    MODIFY `bankName` VARCHAR(191) NULL,
+    MODIFY `beneficiaryName` VARCHAR(191) NULL,
+    MODIFY `businessName` VARCHAR(191) NULL,
+    MODIFY `businessRegCert` VARCHAR(191) NULL,
+    MODIFY `currency` VARCHAR(191) NULL,
+    MODIFY `dateOfEstablishment` DATETIME(3) NULL,
+    MODIFY `email` VARCHAR(191) NULL,
+    MODIFY `generalDetail` VARCHAR(191) NULL,
+    MODIFY `grossAnnualSale` INTEGER NULL,
+    MODIFY `identityProof` VARCHAR(191) NULL,
+    MODIFY `insured` BOOLEAN NULL,
+    MODIFY `licensed` BOOLEAN NULL,
+    MODIFY `mobileNumber` VARCHAR(191) NULL,
+    MODIFY `vendorBusinessType` INTEGER NULL;

@@ -5,34 +5,34 @@ import { transformArrayToIntArray } from 'src/utils';
 
 export class GetVendorDto {
     @ApiProperty({ example: 1 })
-    vendor_id: number;
+    businessId: number;
 
     @ApiProperty({ example: 1 })
-    user_id: number;
+    userId: number;
 
     @ApiProperty({ example: 'https://example.com/profile.png' })
-    profile_picture: string;
+    profilePicture: string;
 
     @ApiProperty({ example: 'John' })
-    first_name: string;
+    firstName: string;
 
     @ApiProperty({ example: 'Doe' })
-    last_name: string;
+    lastName: string;
 
     @ApiProperty({ example: 'johndoe@example.com' })
     email: string;
 
     @ApiProperty({ example: '+1234567890' })
-    phone_number: string;
+    phoneNumber: string;
 
     @ApiProperty({ example: 'ACTIVE' })
     status: string;
 
     @ApiProperty({ example: '2023-06-25T12:34:56.789Z' })
-    created_at: string;
+    createdAt: string;
 
     @ApiProperty({ example: '2023-06-25T12:34:56.789Z' })
-    updated_at: string;
+    updatedAt: string;
 }
 
 

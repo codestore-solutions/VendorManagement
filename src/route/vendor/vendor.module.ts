@@ -6,7 +6,7 @@ import { VendorService } from './vendor.service';
 import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-    imports: [ DatabaseModule ],
+    imports: [ DatabaseModule, ],
     controllers: [VendorController],
     providers: [VendorService],
 })

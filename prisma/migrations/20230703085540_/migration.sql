@@ -56,7 +56,3 @@ ALTER TABLE `Business` ADD CONSTRAINT `Business_vendor_id_fkey` FOREIGN KEY (`ve
 
 -- AddForeignKey
 ALTER TABLE `Business` ADD CONSTRAINT `Business_category_id_fkey` FOREIGN KEY (`category_id`) REFERENCES `BusinessCategory`(`category_id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AlterTable
-ALTER TABLE `address` ADD COLUMN `latitude` DOUBLE NULL,
-    ADD COLUMN `longitude` DOUBLE NULL;

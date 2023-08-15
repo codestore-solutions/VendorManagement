@@ -1,5 +1,8 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpException, HttpStatus, UploadedFile } from "@nestjs/common";
 import { ErrorMessages } from "src/assets/errorMessages";
+import { randomBytes } from 'crypto';
+import { parse } from "path";
+const fs = require('fs');
 
 
 export function validatePhoneNumber(phoneNumber: string) {
@@ -18,7 +21,6 @@ export function validatePhoneNumber(phoneNumber: string) {
 
 
 export function transformArrayToIntArray(value: any, key: string): number[] {
-    console.log(value, '0000000000')
     const parsedValues = [];
     for (const ele of value) {
         const parsedValue = parseInt(ele, 10);
@@ -32,4 +34,26 @@ export function transformArrayToIntArray(value: any, key: string): number[] {
         parsedValues.push(parsedValue)
     }
     return parsedValues;
+}
+
+
+export function generateUniqueSuffix(): string {
+    const randomString = randomBytes(4).toString('hex');
+    const timestamp = Date.now().toString();
+
+    return `${timestamp}_${randomString}`;
+}
+
+
+export function uploadFile(file: any) {
+    try {
+        const uniqueFileSuffix = generateUniqueSuffix();
+        const { name, ext } = parse(file.originalname);
+        const fileName = `${name.replace(/\s/g, '')}_${uniqueFileSuffix}${ext}`
+        fs.writeFileSync(`./files/${fileName}`, file.buffer);
+        return fileName;
+    } catch(error){
+        console.log(error)
+    }
+
 }
