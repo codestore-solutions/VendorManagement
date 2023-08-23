@@ -1,10 +1,10 @@
 export const response = {
 
-    VENDOR_CREATED_SUCCESSFULLY :  "The vendor has been successfully created.",
-    VENDOR_UPDATED_SUCCESSFULLY : "Vendor updated successfully.",
+    vendor_created :  "The vendor has been successfully created.",
+    vendor_updated : "Vendor updated successfully.",
 
-
-    BUSINESS_CREATED_SUCCESSFULLY :  "The store has been successfully created.",
-    BUSINESS_UPDATED_SUCCESSFULLY : "Store details updated successfully.",
+    business_created :  "The store has been successfully created.",
+    business_updated : "Store details updated successfully.",
+    document_updated: "Documents updated successfully"
     
 }

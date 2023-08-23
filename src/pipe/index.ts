@@ -1,4 +1,4 @@
-import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { PipeTransform, Injectable,  ArgumentMetadata, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class FileUploadPipe implements PipeTransform {
@@ -31,6 +31,32 @@ export class FileUploadPipe implements PipeTransform {
             throw new BadRequestException('You can upload only one address proof file.');
         }
 
+        return value;
+    }
+}
+
+
+@Injectable()
+export class YupValidationPipe implements PipeTransform {
+    constructor(private schema) { }
+
+    async transform(value: any, metadata: ArgumentMetadata) {
+        console.log(value, metadata)
+
+        try {
+            if(metadata.type !== 'body'){
+                return value;
+            }
+            const data = await this.schema.validate(value);
+            console.log(data)
+
+            return data;
+        } catch(error){
+            console.log(error)
+            if (error &&  error.message) {
+                throw new BadRequestException(error.message);
+            }
+        }
         return value;
     }
 }

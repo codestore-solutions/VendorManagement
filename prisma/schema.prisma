@@ -16,6 +16,12 @@ enum Status {
   REJECTED
 }
 
+model User {
+  id                  Int             @id @default(autoincrement())
+  email               String          @unique
+  password            String
+}
+
 
 model Vendor {
   id                  Int             @unique
@@ -23,6 +29,7 @@ model Vendor {
   firstName           String
   lastName            String
   phoneNumber         String
+  countryCode         Int?
   businessAdminId     Int
   status              Status          @default(ACTIVE)
   createdAt           DateTime        @default(now())
@@ -38,12 +45,13 @@ model Business {
   vendor              Vendor               @relation("VendorBusiness", fields: [vendorId], references: [id])
   vendorId            Int                  @unique
   businessName        String?
-  mobileNumber        String?
+  countryCode         Int?
+  phoneNumber         String?
   email               String?
   generalDetail       String?
-  dateOfEstablishment DateTime?
+  dateOfEstablishment DateTime?            @db.Date
   areaDescription     String?
-  vendorBusinessType  Int?      
+  vendorBusinessType  String?      
   insured             Boolean?
   licensed            Boolean?
   grossAnnualSale     Int?
@@ -63,8 +71,7 @@ model Business {
 model Address {
   id              Int           @id @default(autoincrement())
   landmark        String
-  street1         String
-  street2         String
+  street          String
   city            String
   state           String
   zipCode         String

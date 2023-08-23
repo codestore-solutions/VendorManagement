@@ -34,7 +34,7 @@ async function bootstrap() {
   const port = configService.get('PORT');
   app.useStaticAssets(join(__dirname, 'assets/images'));
   app.setViewEngine('hbs');
-
+  console.log(__dirname, '..', 'files', join(__dirname, '..', 'files'),)
   try {
     app.use(json({ limit: '50mb' }));
     app.use(urlencoded({ extended: true, limit: '50mb' }));
@@ -42,6 +42,6 @@ async function bootstrap() {
   } catch (err) {
     console.log(err);
   }
-  await app.listen(process.env.PORT || port || 3000);
+  await app.listen(process.env.PORT || port || 3001);
 }
 bootstrap();

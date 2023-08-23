@@ -16,14 +16,13 @@ import { join } from 'path';
       isGlobal: true,
       envFilePath: `environments/${process.env.RUNNING_ENV}.env`
     }),
-    DatabaseModule,
     MulterModule.register({
-      dest: './uploads',
+      dest: './files',
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'files'),
-      serveRoot: '/docs',
     }),
+    DatabaseModule,
     VendorModule,
     BusinessModule,
   ],

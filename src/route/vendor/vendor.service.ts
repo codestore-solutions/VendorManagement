@@ -18,10 +18,34 @@ export class VendorService {
     private readonly logger = new Logger(VendorService.name);
 
     async handleCompanyContactInfo(id: number, companyContactInfo: CompanyInfoDto) {
+        const addressData = {
+            landmark: companyContactInfo.landmark,
+            street: companyContactInfo.street,
+            city: companyContactInfo.city,
+            state: companyContactInfo.state,
+            zipCode: companyContactInfo.zipCode,
+            country: companyContactInfo.country,
+            latitude: companyContactInfo.latitude,
+            longitude: companyContactInfo.longitude,
+        }
+
         await this.prisma.business.update({
             where: { id },
             data: {
-                ...companyContactInfo,
+                businessName: companyContactInfo.businessName,
+                email: companyContactInfo.email,
+                phoneNumber: companyContactInfo.phoneNumber,
+                countryCode: companyContactInfo.countryCode,
+                address: {
+                    upsert: {
+                        create: {
+                            ...addressData
+                        },
+                        update: {
+                            ...addressData
+                        }
+                    }
+                },
                 formStep: 2
             },
         });
@@ -38,16 +62,23 @@ export class VendorService {
     }
 
     async handleDocumentation(id: number, businessRegCert: string,
-        identifyProof: string, addressProof: string, baseUrl: string) {
-        const businessRegCertUrl = baseUrl + '/files/' + businessRegCert;
-        const identifyProofUrl = baseUrl + '/files/' + identifyProof;
-        const addressProofUrl = baseUrl + '/files/' + addressProof;
+        identityProof: string, addressProof: string) {
+
+        const businessData = await this.prisma.business.findFirst({ where: { id } })
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
+        }
+
         await this.prisma.business.update({
             where: { id },
             data: {
-                businessRegCert: businessRegCertUrl,
-                identityProof: identifyProofUrl,
-                addressProof: addressProofUrl,
+                businessRegCert,
+                identityProof,
+                addressProof,
                 formStep: 4
             },
         });
@@ -65,146 +96,143 @@ export class VendorService {
 
 
     /**--------------Creates vendor--------------- */
-    
+
     async createVendorProfile(createVendorDto: CreateVendorDto) {
-        try {
-            const { firstName, lastName, email,
-                phoneNumber, businessAdminId, password } = createVendorDto;
 
-            // API must be called here to user management for creating user (email, password)
+        const { firstName, lastName, email, countryCode,
+            phoneNumber, businessAdminId, password } = createVendorDto;
 
-            const vendorId = 99; // it should be fetched from user management 
+        const user = await this.prisma.user.findFirst({
+            where: { email }
+        })
 
-            await this.prisma.vendor.create({
-                data: {
-                    firstName: firstName,
-                    lastName: lastName,
-                    businessAdminId: businessAdminId,
-                    id: vendorId,
-                    phoneNumber: phoneNumber,
-                    status: 'DETAILS_SUBMISSION_INCOMPLETE',
-                    business: {
-                        create: {
-                            formStep: 1
-                        }
+        if (user) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.EMAIL_ALREADY_EXIST,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
+        }
 
+        // API must be called here to user management for creating user (email, password)
+        const newUser = await this.prisma.user.create({
+            data: {
+                email: email,
+                password: password,
+            }
+        })
+
+        await this.prisma.vendor.create({
+            data: {
+                firstName: firstName,
+                lastName: lastName,
+                businessAdminId: businessAdminId,
+                id: newUser.id,
+                phoneNumber: phoneNumber,
+                countryCode: countryCode,
+                status: 'DETAILS_SUBMISSION_INCOMPLETE',
+                business: {
+                    create: {
+                        formStep: 1,
                     }
                 }
-            })
-
-        } catch (error) {
-            throw new HttpException({
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                message: errorMessages.CREATING_VENDOR,
-                success: false
-            }, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            }
+        })
     }
 
 
     /**--------------Updates company details of vendor--------------- */
 
     async updateCompanyInfo(id: number, companyInfoDto: CompanyInfoDto) {
-        try {
-            const businessData = await this.prisma.business.findFirst({ where: { id } })
-            if (!businessData) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            await this.handleCompanyContactInfo(id, companyInfoDto);
-        } catch (error) {
-            this.logger.error('An error occurred while updating company details', error.message);
-            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                    message: 'Error creating vendor business',
-                    success: false,
-                },
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+
+        const businessData = await this.prisma.business.findFirst({ where: { id } })
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
         }
+        await this.handleCompanyContactInfo(id, companyInfoDto);
+
     }
 
 
     /**--------------Updates company overview of vendor--------------- */
 
     async updateCompanyOverview(id: number, companyOverview: CompanyOverview) {
-        try {
-            const businessData = await this.prisma.business.findFirst({ where: { id } })
-            if (!businessData) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            await this.handleCompanyOverview(id, companyOverview);
-        } catch (error) {
-            this.logger.error('An error occurred while updating overview details', error.message);
-            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                    message: 'Error updating vendor business',
-                    success: false,
-                },
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+        const businessData = await this.prisma.business.findFirst({ where: { id } })
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
         }
+        await this.handleCompanyOverview(id, companyOverview);
     }
 
 
     /**--------------Updates banking details of vendor--------------- */
 
     async updateBankingDetails(id: number, bankDetails: BankDetails) {
-        try {
-            const businessData = await this.prisma.business.findFirst({ where: { id } })
-            if (!businessData) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            await this.handleBankingInfo(id, bankDetails);
-        } catch (error) {
-            this.logger.error('An error occurred while updating overview details', error.message);
-            if (errorMessages.VENDOR_IS_NOT_REGISTERED == error.message) {
-                throw new HttpException({
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    message: errorMessages.VENDOR_IS_NOT_REGISTERED,
-                    success: false
-                }, HttpStatus.BAD_REQUEST);
-            }
-            throw new HttpException(
-                {
-                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                    message: 'Error updating vendor business',
-                    success: false,
-                },
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+
+        const businessData = await this.prisma.business.findFirst({ where: { id } })
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
         }
+        await this.handleBankingInfo(id, bankDetails);
+    }
+
+    async getVendorDetailsSubmissionProgress(id: number) {
+        const businessData = await this.prisma.business.findFirst({ where: { id } })
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+        return { step: businessData.formStep };
+    }
+
+    async getVendorBusinessDetails(id: number) {
+        const businessData = await this.prisma.business.findFirst(
+            {
+                where: { id },
+                include: {
+                    address: true
+                }
+            })
+
+        if (!businessData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+        return businessData;
     }
 
     async getVendorById(id: number) {
-        const vendor = await this.prisma.vendor.findUnique({ where: { id } });
+        const vendor = await this.prisma.vendor.findUnique(
+            {
+                where: { id },
+                include: {
+                    business: {
+                        include: {
+                            address: true
+                        }
+                    }
+                }
+            });
 
         if (!vendor) {
             throw new HttpException({

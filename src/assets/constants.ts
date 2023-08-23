@@ -28,6 +28,7 @@ export const swaggerConstants = {
 }
 
 export const errorMessages = {
+    
     VENDOR_IS_NOT_REGISTERED: 'Vendor is not registered',
     EMAIL_ALREADY_EXIST: 'Email already exist',
     CATEGORY_NOT_FOUND: 'Category not found',

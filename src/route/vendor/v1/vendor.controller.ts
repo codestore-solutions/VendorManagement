@@ -1,11 +1,14 @@
 import {
     Body, Controller, Get, Param, ParseIntPipe,
-    Post, Query, Req, UploadedFiles, UseInterceptors, UsePipes, ValidationPipe
+    Post, Put, Query, Req, UploadedFiles, UseInterceptors, UsePipes, ValidationPipe
 } from '@nestjs/common';
-import { BankDetails, CompanyInfoDto, CompanyOverview, 
-    CreateVendorDto, Documentation } from '../dto/create-vendor.dto';
+import {
+    BankDetails, CompanyInfoDto, CompanyOverview,
+    CreateVendorDto, Documentation
+} from '../dto/create-vendor.dto';
 import { VendorService } from '../vendor.service';
-import { ApiBody, ApiConsumes, ApiCreatedResponse, ApiNotFoundResponse,
+import {
+    ApiBody, ApiConsumes, ApiCreatedResponse, ApiNotFoundResponse,
     ApiOkResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags
 } from '@nestjs/swagger';
 import { response } from 'src/assets/response';
@@ -13,7 +16,8 @@ import { GetVendorBusinessQuery, GetVendorDto } from '../dto/vendor.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { uploadFile } from 'src/utils';
 import { Request } from 'express';
-import { FileUploadPipe } from 'src/pipe';
+import { FileUploadPipe, YupValidationPipe } from 'src/pipe';
+import createVendorSchema, { bankDetailsSchema, companyInfoSchema, companyOverviewSchema } from 'src/validations/vendor.validation';
 
 
 @ApiTags('Vendors')
@@ -21,23 +25,22 @@ import { FileUploadPipe } from 'src/pipe';
 export class VendorController {
     constructor(private readonly vendorService: VendorService) { }
 
-
     /**--------------Creates vendor on registration------------------*/
 
     // @ApiBearerAuth()
     // @UseGuards(JwtAuthGuard)
     @Post('create')
     @ApiCreatedResponse({
-        description: response.VENDOR_CREATED_SUCCESSFULLY,
+        description: response.vendor_created,
     })
     @ApiOperation({
         summary: 'Create vendor',
         description: 'Creates vendor with the information provided'
     })
-    @UsePipes(new ValidationPipe({ transform: true }))
+    @UsePipes(new YupValidationPipe(createVendorSchema))
     async createVendor(@Body() createVendorDto: CreateVendorDto) {
         await this.vendorService.createVendorProfile(createVendorDto);
-        return response.VENDOR_CREATED_SUCCESSFULLY;
+        return response.vendor_created;
     }
 
 
@@ -45,20 +48,20 @@ export class VendorController {
 
     // @ApiBearerAuth()
     // @UseGuards(JwtAuthGuard)
-    @Post('updateCompanyInfo/:businessEntityId')
+    @Put('updateCompanyInfo/:businessId')
     @ApiCreatedResponse({
-        description: response.BUSINESS_UPDATED_SUCCESSFULLY,
+        description: response.business_updated,
     })
     @ApiOperation({
         summary: 'Update company details',
     })
-    @UsePipes(new ValidationPipe({ transform: true }))
+    @UsePipes(new YupValidationPipe(companyInfoSchema))
     async updateCompanyBusinessDetails(
         @Body() companyInfoDto: CompanyInfoDto,
-        @Param('businessEntityId', ParseIntPipe) businessEntityId: number) {
+        @Param('businessId', ParseIntPipe) businessId: number) {
 
-        await this.vendorService.updateCompanyInfo(businessEntityId, companyInfoDto);
-        return response.BUSINESS_UPDATED_SUCCESSFULLY;
+        await this.vendorService.updateCompanyInfo(businessId, companyInfoDto);
+        return response.business_updated;
     }
 
 
@@ -66,20 +69,20 @@ export class VendorController {
 
     // @ApiBearerAuth()
     // @UseGuards(JwtAuthGuard)
-    @Post('updateCompanyOverview/:businessEntityId')
+    @Put('updateCompanyOverview/:businessId')
     @ApiCreatedResponse({
-        description: response.BUSINESS_UPDATED_SUCCESSFULLY,
+        description: response.business_updated,
     })
     @ApiOperation({
         summary: 'Updates Company overview',
     })
-    @UsePipes(new ValidationPipe({ transform: true }))
+    @UsePipes(new YupValidationPipe(companyOverviewSchema))
     async updateCompanyOverviewDetails(
         @Body() companyOverview: CompanyOverview,
-        @Param('businessEntityId', ParseIntPipe) businessEntityId: number) {
+        @Param('businessId', ParseIntPipe) businessId: number) {
 
-        await this.vendorService.updateCompanyOverview(businessEntityId, companyOverview);
-        return response.BUSINESS_UPDATED_SUCCESSFULLY;
+        await this.vendorService.updateCompanyOverview(businessId, companyOverview);
+        return response.business_updated;
     }
 
 
@@ -87,9 +90,9 @@ export class VendorController {
 
     // @ApiBearerAuth()
     // @UseGuards(JwtAuthGuard)
-    @Post('addBusinessDocuments/:businessEntityId')
+    @Post('addBusinessDocuments/:businessId')
     @ApiCreatedResponse({
-        description: response.BUSINESS_UPDATED_SUCCESSFULLY,
+        description: response.business_updated,
     })
     @ApiOperation({
         summary: 'Update business vendor documentation details',
@@ -100,12 +103,6 @@ export class VendorController {
         description: 'Upload multiple image files',
         type: Documentation,
     })
-    @ApiQuery({
-        name: 'vendorBusinessId',
-        required: true,
-        type: Number,
-        description: 'ID value associated with the uploaded images',
-    })
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'businessRegCert', maxCount: 1 },
         { name: 'identifyProof', maxCount: 1 },
@@ -113,9 +110,9 @@ export class VendorController {
     ]))
     async updateVendorDocumenation(@UploadedFiles(FileUploadPipe) files: {
         businessRegCert: Express.Multer.File[],
-        identifyProof: Express.Multer.File[], addressProof: Express.Multer.File[]
-    }, @Req() request: Request,
-        @Param('businessEntityId', ParseIntPipe) businessEntityId: number) {
+        identifyProof: Express.Multer.File[], 
+        addressProof: Express.Multer.File[]
+    }, @Param('businessId', ParseIntPipe) businessId: number) {
 
         const businessRegCert = files.businessRegCert[0]
         const identifyProof = files.identifyProof[0]
@@ -123,14 +120,11 @@ export class VendorController {
 
         const businessRegCertName = uploadFile(businessRegCert)
         const identifyProofName = uploadFile(identifyProof)
-        const addressProofName= uploadFile(addressProof)
+        const addressProofName = uploadFile(addressProof)
 
-
-        const baseUrl = request.protocol + '://' + request.get('host');
-
-        await this.vendorService.handleDocumentation(businessEntityId, businessRegCertName, 
-            identifyProofName, addressProofName, baseUrl);
-        return response.VENDOR_UPDATED_SUCCESSFULLY;
+        await this.vendorService.handleDocumentation(businessId, businessRegCertName,
+            identifyProofName, addressProofName);
+        return response.document_updated;
     }
 
 
@@ -138,21 +132,22 @@ export class VendorController {
 
     // @ApiBearerAuth()
     // @UseGuards(JwtAuthGuard)
-    @Post('updateCompanyBankingDetails/:businessEntityId')
+    @Put('updateCompanyBankingDetails/:businessId')
     @ApiCreatedResponse({
-        description: response.BUSINESS_UPDATED_SUCCESSFULLY,
+        description: response.business_updated,
     })
     @ApiOperation({
         summary: 'Updates Company anking details',
     })
-    @UsePipes(new ValidationPipe({ transform: true }))
+    @UsePipes(new YupValidationPipe(bankDetailsSchema))
     async updateCompanyBankingDetails(
         @Body() bankDetails: BankDetails,
-        @Param('businessEntityId', ParseIntPipe) businessEntityId: number) {
+        @Param('businessId', ParseIntPipe) businessId: number) {
 
-        await this.vendorService.updateBankingDetails(businessEntityId, bankDetails);
-        return response.BUSINESS_UPDATED_SUCCESSFULLY;
+        await this.vendorService.updateBankingDetails(businessId, bankDetails);
+        return response.business_updated;
     }
+
 
     /**-----------Gets vendors based on list of id's/ used by order processing----------- */
 
@@ -179,8 +174,24 @@ export class VendorController {
     })
     @ApiOperation({ summary: 'Get Vendor by ID' })
     @ApiNotFoundResponse({ description: 'Vendor not found.' })
-    @Get(':id')
+    @Get('getVendorDetailsById/:id')
     getVendorById(@Param('id', ParseIntPipe) id: number) {
         return this.vendorService.getVendorById(id);
+    }
+
+    /**----------Get vendor form submission progress -------- */
+    @ApiOperation({ summary: 'Get Vendor registration progress' })
+    @ApiNotFoundResponse({ description: 'Vendor not found.' })
+    @Get('getVendorBusinessDetailsSubmissionProgress/:businessId')
+    getVendorDetailsSubmissionProgress(@Param('businessId', ParseIntPipe) businessId: number) {
+        return this.vendorService.getVendorDetailsSubmissionProgress(businessId);
+    }
+
+    /**----------Get vendor business details-------- */
+    @ApiOperation({ summary: 'Get Vendor business details by ID' })
+    @ApiNotFoundResponse({ description: 'Vendor not found.' })
+    @Get('getVendorBusinessDetails/:businessId')
+    getVendorBusinessDetails(@Param('businessId', ParseIntPipe) businessId: number) {
+        return this.vendorService.getVendorBusinessDetails(businessId);
     }
 }

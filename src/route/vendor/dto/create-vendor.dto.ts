@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsISO8601, IsInt, IsLatitude, IsLongitude, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
 import { validatePhoneNumber } from 'src/utils';
-import { CompanyContactInfo } from 'src/valdiations/business.validtaion';
+import { CompanyContactInfo } from 'src/validations/business.validation';
 
 
 export class CreateVendorDto {
@@ -26,11 +26,15 @@ export class CreateVendorDto {
   @ApiProperty({ example: "amit.sharma@example.com" })
   email: string;
 
-  @Transform(({ value }) => validatePhoneNumber(value))
   @IsNotEmpty()
   @IsPhoneNumber()
-  @ApiProperty({ example: "+91-8001234567" })
+  @ApiProperty({ example: "8001234567" })
   phoneNumber: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @ApiProperty({ example: 91 })
+  countryCode: number;
 
   @IsNotEmpty()
   @IsInt()
@@ -39,8 +43,8 @@ export class CreateVendorDto {
 
   @IsNotEmpty()
   @IsStrongPassword()
-  @ApiProperty({ example: 'password@123$5' })
-  password: number;
+  @ApiProperty({ example: 'Password@123$5' })
+  password: string;
 }
 
 
@@ -58,11 +62,7 @@ export class CompanyInfoDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({ example: 'Street 1 Example' })
-  street1: string;
-
-  @IsString()
-  @ApiProperty({ example: 'Street 2 Example' })
-  street2: string;
+  street: string;
 
   @IsNotEmpty()
   @IsString()
@@ -96,8 +96,13 @@ export class CompanyInfoDto {
   @ApiProperty({ example: 'xyz@example.com' })
   email: string;
 
+  @IsNotEmpty()
+  @IsInt()
+  @ApiProperty({ example: 91 })
+  countryCode: number;
+
   @IsString()
-  @ApiProperty({ example: '91 8921214567' })
+  @ApiProperty({ example: '8921214567' })
   phoneNumber: string;
 }
 
@@ -117,9 +122,9 @@ export class CompanyOverview {
   @ApiProperty({ example: 'Geographic service area description...' })
   areaDescription: string;
 
-  @IsInt()
-  @ApiProperty({ example: 1 })
-  vendorBusinessType: number;
+  @IsString()
+  @ApiProperty({ example: 'Clothing' })
+  vendorBusinessType: string;
 
   @IsNotEmpty()
   @IsBoolean()
@@ -168,25 +173,24 @@ export class Documentation {
 export class BankDetails {
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ example: true })
+  @ApiProperty({ example: "SBI" })
   bankName: string;
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ example: 100000 })
-  identifyProof: string;
+  @ApiProperty({ example: "Ramesh mp" })
+  beneficiaryName: string;
 
   @IsNotEmpty()
-  @IsString()
-  @ApiProperty({ example: 'INR' })
-  addressProof: string;
+  @IsInt()
+  @ApiProperty({ example: 7654272552827252 })
+  accountNumber: string;
 }
 
 const vendorBusinessData = {
   businessName: 'Indian Spices Emporium',
   landmark: 'Near Gandhi Chowk',
-  street1: '123 Market Street',
-  street2: 'Shop No. 56',
+  street: '123 Market Street',
   city: 'Mumbai',
   state: 'Maharashtra',
   zipCode: '400001',
@@ -194,7 +198,8 @@ const vendorBusinessData = {
   latitude: 19.0760,
   longitude: 72.8777,
   email: 'contact@indianspices.com',
-  phoneNumber: '+91 9876543210'
+  countryCode: 91,
+  phoneNumber: '9876543210'
 };
 
 const vendorGeneralBusinessDetails = {

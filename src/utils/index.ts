@@ -10,13 +10,9 @@ export function validatePhoneNumber(phoneNumber: string) {
     const regex = /^\+\d{1,3}-\d{1,14}$/;
 
     if (!regex.test(phoneNumber)) {
-        throw new HttpException({
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: ErrorMessages.INVALID_PHONE_NUMBER.message,
-            success: false
-        }, HttpStatus.BAD_REQUEST);
+        return false
     }
-    return phoneNumber;
+    return true;
 }
 
 
