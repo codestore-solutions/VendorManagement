@@ -1,11 +1,15 @@
 
 import { useState, type ReactElement } from 'react'
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Button, Checkbox, Form, Input } from 'antd';
+import { Alert, Button, Form, Input, Select, notification } from 'antd';
 import Link from 'next/link';
-import { useSession, signIn } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useRouter } from 'next/router'
+import { signUpUser } from '@/httpServices/userService';
+import { SignUpFormFinalData } from '@/types';
+import { passwordValidationRegex } from '@/utils';
 
+const { Option } = Select;
 
 interface RegistrationValues {
     email: string;
@@ -24,24 +28,56 @@ export default function Registration() {
 
     const [loading, setLoading] = useState<boolean>(false)
     const [errorMessage, setErrorMessage] = useState<string | null>()
-    const onFinish = async (values: any) => {
-        console.log('Received values of form: ', values);
-        setLoading(true)
-        const { email, password } = values;
-        const res = await signIn('credentials', {
-            callbackUrl: '/business-admin/vendor',
-            email,
-            password,
-            redirect: false,
-        });
-        if (res?.error) {
+    const onFinish = async (values: SignUpFormFinalData) => {
+        try {
+            const { firstName, lastName, email, countryCode,
+                phoneNumber, businessAdminId, password, confirmPassword } = values;
+
+            if (password !== confirmPassword) {
+                setErrorMessage('Passwords do not match');
+                return;
+            }
+
+            if (!passwordValidationRegex.test(password)) {
+                setErrorMessage('Password must contain at least 8 characters, including one uppercase letter, one lowercase letter, one digit, and one special character');
+                return;
+            }
+
+            setLoading(true)
+            setErrorMessage(null)
+
+            await signUpUser({ 
+                firstName, lastName, 
+                email,
+                businessAdminId: 1,
+                password,
+                phoneNumber,
+                countryCode
+            });
+  
+            router.push('/auth/signin');
+            notification.success({
+                message: 'Signup successfull',
+                description: 'You are registered successfully!!',
+            });
             setLoading(false)
-            setErrorMessage("Invalid username or password. Please try again")
-            setTimeout(() => {
-                setErrorMessage(null)
-            }, 3000)
+        } catch (error) {
+            setLoading(false)
+
+            console.log(error)
         }
+        console.log('Received values of form: ', values);
+
     };
+
+    const prefixCountryCodeSelector = (
+        <Form.Item name="countryCode" noStyle={true}>
+            <Select style={{ width: 90 }} placeholder="Code">
+                <Option value="86">+91</Option>
+                <Option value="87">+92</Option>
+            </Select>
+        </Form.Item>
+    );
 
     return (
         <div className='min-h-screen flex'>
@@ -58,6 +94,24 @@ export default function Registration() {
                         initialValues={{ remember: true }}
                         onFinish={onFinish}>
                         <Form.Item
+                            name="firstName"
+                            rules={[{ required: true, message: 'Please input your first name!' }]}>
+                            <Input
+                                type="text"
+                                prefix={<UserOutlined className="site-form-item-icon" />}
+                                placeholder="First name"
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            name="lastName"
+                            rules={[{ required: true, message: 'Please input your last name!' }]}>
+                            <Input
+                                type="text"
+                                prefix={<UserOutlined className="site-form-item-icon" />}
+                                placeholder="Last name"
+                            />
+                        </Form.Item>
+                        <Form.Item
                             name="email"
                             rules={[{ required: true, message: 'Please input your Email!' }]}>
                             <Input
@@ -65,6 +119,15 @@ export default function Registration() {
                                 placeholder="Email"
                             />
                         </Form.Item>
+
+                        <Form.Item
+                            name="phoneNumber"
+                            rules={[{ required: true, message: 'Please input your phone number!' }]}>
+                            <Input addonBefore={prefixCountryCodeSelector}
+                                style={{ width: '100%' }}
+                                placeholder='Phone number' />
+                        </Form.Item>
+
                         <Form.Item
                             name="password"
                             rules={[{ required: true, message: 'Please input your Password!' }]}>

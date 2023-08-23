@@ -37,14 +37,14 @@ export default function () {
             <div className='w-full flex flex-col lg:flex-row justify-between'>
 
                 <Form.Item
-                    label="Business Type"
-                    name="businessType"
+                    label="Vendor Business Type"
+                    name="vendorBusinessType"
                     className='w-full lg:w-1/2 mr-4'
                     rules={[{ required: true, message: 'Please select business type!' }]}>
                     <Select
                         className='w-full'
                         placeholder='Select Business Type'>
-                        <Select.Option value="demo">Demo</Select.Option>
+                        <Select.Option value="clothing">Clothing</Select.Option>
                     </Select>
                 </Form.Item>
 
@@ -54,8 +54,8 @@ export default function () {
                         name="insured"
                         rules={[{ required: true, message: 'Please select insured!' }]}>
                         <Radio.Group>
-                            <Radio value="yes"> Yes </Radio>
-                            <Radio value="no"> No </Radio>
+                            <Radio value={true}> Yes </Radio>
+                            <Radio value={false}> No </Radio>
                         </Radio.Group>
                     </Form.Item>
 
@@ -64,8 +64,8 @@ export default function () {
                         name="licensed"
                         rules={[{ required: true, message: 'Please select licensed!' }]}>
                         <Radio.Group>
-                            <Radio value="yes"> Yes </Radio>
-                            <Radio value="no"> No </Radio>
+                            <Radio value={true}> Yes </Radio>
+                            <Radio value={false}> No </Radio>
                         </Radio.Group>
                     </Form.Item>
                 </div>
@@ -78,6 +78,7 @@ export default function () {
                     className='w-full lg:w-1/2 mr-4'
                     rules={[{ required: true, message: 'Please input Gross Annual Sales!' }]}>
                     <Input
+                        type="number"
                         placeholder="Enter Gross Annual Sales" />
                 </Form.Item>
 

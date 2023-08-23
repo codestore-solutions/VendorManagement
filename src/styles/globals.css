@@ -161,3 +161,7 @@ table thead tr .ant-table-cell {
   border: 3px solid #fff;
   color: red;
 }
+
+.ant-upload-select{
+  width: 60% !important;
+}

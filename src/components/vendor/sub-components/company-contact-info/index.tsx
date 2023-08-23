@@ -1,13 +1,16 @@
-import { validatePhoneNumber } from '@/utils/validation';
+import { validateLongitude, validatePhoneNumber,
+    validateLatitude } from '@/utils/validation';
 import { Form, Input, Select } from 'antd';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 
-const prefixSelector = (
-    <Form.Item name="prefix" noStyle>
-        <Select style={{ width: 70 }}>
+const prefixCountryCodeSelector = (
+    <Form.Item name="countryCode" 
+        noStyle
+        rules={[{ required: true, message: 'Please input country code!' }]}>
+        <Select style={{ width: 90 }} placeholder="Code">
             <Option value="86">+86</Option>
             <Option value="87">+87</Option>
         </Select>
@@ -30,21 +33,21 @@ export default function () {
 
             <div className='w-full flex flex-col lg:flex-row justify-between'>
                 <Form.Item
-                    label="Street Address I"
-                    name="street1"
+                    label="Landmark"
+                    name="landmark"
                     className='w-full lg:w-1/2 mr-4'
-                    rules={[{ required: true, message: 'Please input vendor business street I!' }]}>
+                    rules={[{ required: true, message: 'Please input landmark!' }]}>
                     <TextArea rows={4}
-                        placeholder="Enter Street Address I" />
+                        placeholder="Enter landmark" />
                 </Form.Item>
 
                 <Form.Item
-                    label="Street Address II"
-                    name="street2"
+                    label="Street Address"
+                    name="street"
                     className='w-full lg:w-1/2'
-                    rules={[{ required: true, message: 'Please input vendor business street II!' }]}>
+                    rules={[{ required: true, message: 'Please input vendor business street!' }]}>
                     <TextArea rows={4}
-                        placeholder="Enter Street Address II" />
+                        placeholder="Enter Street Address" />
                 </Form.Item>
             </div>
 
@@ -59,12 +62,12 @@ export default function () {
                 </Form.Item>
 
                 <Form.Item
-                    label="State Province"
+                    label="State/Province"
                     name="state"
                     className='w-full lg:w-1/2'
                     rules={[{ required: true, message: 'Please input State Province' }]}>
                     <Input
-                        placeholder="Enter State Province" />
+                        placeholder="Enter State/Province" />
                 </Form.Item>
             </div>
 
@@ -90,18 +93,18 @@ export default function () {
 
             <div className='w-full flex flex-col lg:flex-row justify-between'>
                 <Form.Item
-                    label="Mobile Number"
-                    name="mobileNumber"
+                    label="Phone Number"
+                    name="phoneNumber"
                     className='w-full lg:w-1/2 mr-4'
                     rules={[
                         {
                             required: true,
-                            message: 'Please input Mobile Number!'
+                            message: 'Please input Phone Number!'
                         },
                         { validator: validatePhoneNumber },
                     ]}>
                     <Input
-                        addonBefore={prefixSelector}
+                        addonBefore={prefixCountryCodeSelector}
                         placeholder="Enter mobile number" />
                 </Form.Item>
 
@@ -119,8 +122,44 @@ export default function () {
                             message: 'Please input Email ID!'
                         }]}>
                     <Input
-                        placeholder="Enter email address" />
+                        type="email"
+                        placeholder="Enter email" />
                 </Form.Item>
+            </div>
+            <div className='w-full flex flex-col lg:flex-row justify-between'>
+                <div className='w-full lg:w-1/2 flex justify-between'>
+                    <Form.Item
+                        label="Latitude"
+                        name="latitude"
+                        className='w-full lg:w-1/2 mr-2'
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please input latitude value!'
+                            },
+                            { validator: validateLatitude },
+                        ]}>
+                        <Input
+                            type="number"
+                            placeholder="Enter latitude" />
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Longitude"
+                        name="longitude"
+                        className='w-full lg:w-1/2  ml-2'
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please input longitude value!'
+                            },
+                            { validator: validateLongitude }
+                        ]}>
+                        <Input
+                            type="number"
+                            placeholder="Enter longitude" />
+                    </Form.Item>
+                </div>
             </div>
         </>
     )

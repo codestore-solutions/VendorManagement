@@ -12,3 +12,5 @@ export function getColorForVerificationState(state: verificationType): string {
             return 'black';
     }
 }
+
+export const passwordValidationRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
