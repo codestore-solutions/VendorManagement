@@ -15,6 +15,11 @@ export const ErrorMessages = {
         message: "Vendor not found"
     },
 
+    VENDORS_NOT_FOUND: {
+        code: "VENDORS_NOT_FOUND",
+        message: "Vendors not found"
+    },
+
     INVALID_PAGINATON_INPUT: {
         code: 'INVALID_PAGINATON_INPUT',
         message: 'Both pageSize and pageNumber must be provided together'

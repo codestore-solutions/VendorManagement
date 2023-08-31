@@ -6,6 +6,10 @@ import { IsBoolean, IsEmail, IsISO8601, IsInt, IsLatitude, IsLongitude, IsNotEmp
 import { validatePhoneNumber } from 'src/utils';
 import { CompanyContactInfo } from 'src/validations/business.validation';
 
+export interface LoginUserDto{
+  email: string;
+  password: string;
+}
 
 export class CreateVendorDto {
 
@@ -183,7 +187,7 @@ export class BankDetails {
 
   @IsNotEmpty()
   @IsInt()
-  @ApiProperty({ example: 7654272552827252 })
+  @ApiProperty({ example: '1234567890123456' })
   accountNumber: string;
 }
 

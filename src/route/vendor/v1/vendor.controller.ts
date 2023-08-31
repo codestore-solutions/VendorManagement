@@ -1,29 +1,43 @@
 import {
     Body, Controller, Get, Param, ParseIntPipe,
-    Post, Put, Query, Req, UploadedFiles, UseInterceptors, UsePipes, ValidationPipe
+    Post, Put, Query, UploadedFiles, UseInterceptors, UsePipes, ValidationPipe
 } from '@nestjs/common';
 import {
     BankDetails, CompanyInfoDto, CompanyOverview,
-    CreateVendorDto, Documentation
+    CreateVendorDto, Documentation, LoginUserDto
 } from '../dto/create-vendor.dto';
 import { VendorService } from '../vendor.service';
 import {
     ApiBody, ApiConsumes, ApiCreatedResponse, ApiNotFoundResponse,
-    ApiOkResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags
+    ApiOkResponse, ApiOperation, ApiResponse, ApiTags
 } from '@nestjs/swagger';
 import { response } from 'src/assets/response';
 import { GetVendorBusinessQuery, GetVendorDto } from '../dto/vendor.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { uploadFile } from 'src/utils';
-import { Request } from 'express';
 import { FileUploadPipe, YupValidationPipe } from 'src/pipe';
-import createVendorSchema, { bankDetailsSchema, companyInfoSchema, companyOverviewSchema } from 'src/validations/vendor.validation';
+import createVendorSchema, { bankDetailsSchema, companyInfoSchema, 
+    companyOverviewSchema } from 'src/validations/vendor.validation';
+import { PrismaClient } from '@prisma/client';
 
 
 @ApiTags('Vendors')
 @Controller('v1/vendors')
 export class VendorController {
     constructor(private readonly vendorService: VendorService) { }
+
+    /**--------------Sign in api vendor/business------------------*/
+
+    // @ApiBearerAuth()
+    // @UseGuards(JwtAuthGuard)
+    @Post('signin')
+    @ApiOperation({
+        summary: 'Sign in/test api',
+        description: 'Signin api for vendor and business admin'
+    })
+    async login(@Body() loginUserDto: LoginUserDto) {
+        return await this.vendorService.login(loginUserDto);
+    }
 
     /**--------------Creates vendor on registration------------------*/
 
@@ -105,25 +119,36 @@ export class VendorController {
     })
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'businessRegCert', maxCount: 1 },
-        { name: 'identifyProof', maxCount: 1 },
+        { name: 'identityProof', maxCount: 1 },
         { name: 'addressProof', maxCount: 1 },
     ]))
-    async updateVendorDocumenation(@UploadedFiles(FileUploadPipe) files: {
+    async updateVendorDocumenation(@UploadedFiles(new FileUploadPipe(new PrismaClient())) files: {
         businessRegCert: Express.Multer.File[],
-        identifyProof: Express.Multer.File[], 
-        addressProof: Express.Multer.File[]
+        identityProof: Express.Multer.File[],
+        addressProof: Express.Multer.File[],
     }, @Param('businessId', ParseIntPipe) businessId: number) {
 
-        const businessRegCert = files.businessRegCert[0]
-        const identifyProof = files.identifyProof[0]
-        const addressProof = files.addressProof[0]
+        let businessRegCertFile: string | undefined;
+        let identityProofFile: string | undefined;
+        let addressProofFile: string | undefined;
 
-        const businessRegCertName = uploadFile(businessRegCert)
-        const identifyProofName = uploadFile(identifyProof)
-        const addressProofName = uploadFile(addressProof)
+        if (files.businessRegCert && files.businessRegCert.length > 0) {
+            const businessRegCert = files.businessRegCert[0];
+            businessRegCertFile = uploadFile(businessRegCert);
+        }
 
-        await this.vendorService.handleDocumentation(businessId, businessRegCertName,
-            identifyProofName, addressProofName);
+        if (files.identityProof && files.identityProof.length > 0) {
+            const identityProof = files.identityProof[0];
+            identityProofFile = uploadFile(identityProof);
+        }
+
+        if (files.addressProof && files.addressProof.length > 0) {
+            const addressProof = files.addressProof[0];
+            addressProofFile = uploadFile(addressProof);
+        }
+
+        await this.vendorService.handleDocumentation(businessId, businessRegCertFile,
+            identityProofFile, addressProofFile);
         return response.document_updated;
     }
 
@@ -137,13 +162,12 @@ export class VendorController {
         description: response.business_updated,
     })
     @ApiOperation({
-        summary: 'Updates Company anking details',
+        summary: 'Updates Company banking details',
     })
     @UsePipes(new YupValidationPipe(bankDetailsSchema))
     async updateCompanyBankingDetails(
         @Body() bankDetails: BankDetails,
         @Param('businessId', ParseIntPipe) businessId: number) {
-
         await this.vendorService.updateBankingDetails(businessId, bankDetails);
         return response.business_updated;
     }
@@ -179,7 +203,29 @@ export class VendorController {
         return this.vendorService.getVendorById(id);
     }
 
+
+    // @ApiBearerAuth()
+    // @UseGuards(JwtAuthGuard)
+    @ApiOkResponse({
+        description: 'Vendor found and returned successfully.',
+        type: GetVendorDto,
+    })
+    @ApiOperation({ summary: 'Get Vendors by Business admin ID' })
+    @ApiNotFoundResponse({ description: 'Vendors not found.' })
+    @Get('getVendorsByBusinessAdminId/:id')
+    getVendorByBusinessAdminId(@Param('id', ParseIntPipe) id: number) {
+        return this.vendorService.getVendorByBusinessAdminId(id);
+    }
+
     /**----------Get vendor form submission progress -------- */
+    @ApiOperation({ summary: 'Get Vendor profile status' })
+    @ApiNotFoundResponse({ description: 'Vendor not found.' })
+    @Get('getVendorProfileStatus/:vendorId')
+    getVendorProfileStatus(@Param('vendorId', ParseIntPipe) vendorId: number) {
+        return this.vendorService.getVendorProfileStatus(vendorId);
+    }
+
+    /**----------Get vendor form profile status-------- */
     @ApiOperation({ summary: 'Get Vendor registration progress' })
     @ApiNotFoundResponse({ description: 'Vendor not found.' })
     @Get('getVendorBusinessDetailsSubmissionProgress/:businessId')

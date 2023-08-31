@@ -61,7 +61,12 @@ const companyOverviewSchema = yup.object().shape({
 const bankDetailsSchema = yup.object().shape({
     bankName: yup.string().required().min(1).max(100).label('Bank Name'),
     beneficiaryName: yup.string().required().min(1).max(100).label('Beneficiary Name'),
-    accountNumber: yup.string().required().matches(/^\d+$/, 'Account number must be numeric').min(1).max(50).label('Account Number'),
+    accountNumber: yup.string().required()
+        .test('valid-account-number', 'Invalid account number', value => {
+            const isDigitsOnly = /^\d+$/.test(value);
+            if (!isDigitsOnly) return false;
+            return value.replace(/\s/g, '').length === 16; // Example validation
+        })
 });
 
 export { companyInfoSchema, companyOverviewSchema, bankDetailsSchema };

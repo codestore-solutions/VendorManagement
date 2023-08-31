@@ -4,9 +4,9 @@ import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/c
 import {
     BankDetails,
     CompanyInfoDto,
-    CompanyOverview, CreateVendorDto,
+    CompanyOverview, CreateVendorDto, LoginUserDto,
 } from './dto/create-vendor.dto';
-import { PRISMA_CLIENT, errorMessages } from 'src/assets/constants';
+import { PRISMA_CLIENT, VendorStatusEnum, errorMessages } from 'src/assets/constants';
 import { PrismaClient } from '@prisma/client';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { ErrorMessages } from 'src/assets/errorMessages';
@@ -17,7 +17,9 @@ export class VendorService {
     constructor(@Inject(PRISMA_CLIENT) private readonly prisma: PrismaClient) { }
     private readonly logger = new Logger(VendorService.name);
 
-    async handleCompanyContactInfo(id: number, companyContactInfo: CompanyInfoDto) {
+    async handleCompanyContactInfo(id: number, formStep: number,
+        companyContactInfo: CompanyInfoDto) {
+
         const addressData = {
             landmark: companyContactInfo.landmark,
             street: companyContactInfo.street,
@@ -46,17 +48,17 @@ export class VendorService {
                         }
                     }
                 },
-                formStep: 2
+                formStep: formStep > 2 ? formStep : 2
             },
         });
     }
 
-    async handleCompanyOverview(id: number, companyOverview: CompanyOverview) {
+    async handleCompanyOverview(id: number, formStep: number, companyOverview: CompanyOverview) {
         await this.prisma.business.update({
             where: { id },
             data: {
                 ...companyOverview,
-                formStep: 3
+                formStep: formStep > 3 ? formStep : 3
             },
         });
     }
@@ -73,13 +75,15 @@ export class VendorService {
             }, HttpStatus.BAD_REQUEST);
         }
 
+        const formStep = businessData.formStep;
+
         await this.prisma.business.update({
             where: { id },
             data: {
-                businessRegCert,
-                identityProof,
-                addressProof,
-                formStep: 4
+                businessRegCert: businessRegCert ? businessRegCert : businessData.businessRegCert,
+                identityProof: identityProof ? identityProof : businessData.identityProof,
+                addressProof: addressProof ? addressProof : businessData.addressProof,
+                formStep: formStep > 4 ? formStep : 4
             },
         });
     }
@@ -89,9 +93,29 @@ export class VendorService {
             where: { id },
             data: {
                 ...bankDetails,
-                formStep: 5
+                formStep: 4,
+                vendor: {
+                    update: {
+                        status: VendorStatusEnum.DETAILS_SUBMISSION_COMPLETED,
+                    }
+                }
             },
         });
+    }
+
+    async login(loginUserDto: LoginUserDto) {
+        const { email, password } = loginUserDto;
+        const user = await this.prisma.user.findFirst({
+            where: { email }
+        })
+        
+        if(user.password === password) return user;
+
+        throw new HttpException({
+            statusCode: HttpStatus.UNAUTHORIZED,
+            message: errorMessages.INVALID_CREDS,
+            success: false
+        }, HttpStatus.UNAUTHORIZED);
     }
 
 
@@ -119,6 +143,7 @@ export class VendorService {
             data: {
                 email: email,
                 password: password,
+                role: 3
             }
         })
 
@@ -133,6 +158,7 @@ export class VendorService {
                 status: 'DETAILS_SUBMISSION_INCOMPLETE',
                 business: {
                     create: {
+                        id: newUser.id,
                         formStep: 1,
                     }
                 }
@@ -153,7 +179,7 @@ export class VendorService {
                 success: false
             }, HttpStatus.BAD_REQUEST);
         }
-        await this.handleCompanyContactInfo(id, companyInfoDto);
+        await this.handleCompanyContactInfo(id, businessData.formStep, companyInfoDto);
 
     }
 
@@ -169,7 +195,7 @@ export class VendorService {
                 success: false
             }, HttpStatus.BAD_REQUEST);
         }
-        await this.handleCompanyOverview(id, companyOverview);
+        await this.handleCompanyOverview(id, businessData.formStep, companyOverview);
     }
 
 
@@ -199,6 +225,19 @@ export class VendorService {
         }
 
         return { step: businessData.formStep };
+    }
+
+    async getVendorProfileStatus(id: number) {
+        const vendorData = await this.prisma.vendor.findFirst({ where: { id } })
+        if (!vendorData) {
+            throw new HttpException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: errorMessages.VENDOR_IS_NOT_REGISTERED,
+                success: false
+            }, HttpStatus.BAD_REQUEST);
+        }
+
+        return { status: vendorData.status };
     }
 
     async getVendorBusinessDetails(id: number) {
@@ -238,6 +277,22 @@ export class VendorService {
             throw new HttpException({
                 statusCode: HttpStatus.NOT_FOUND,
                 message: ErrorMessages.VENDOR_NOT_FOUND,
+                success: false
+            }, HttpStatus.NOT_FOUND);
+        }
+
+        return vendor;
+    }
+
+
+    async getVendorByBusinessAdminId(id: number) {
+        const vendor = await this.prisma.vendor.findMany(
+            { where: { businessAdminId: id }, });
+
+        if (!vendor) {
+            throw new HttpException({
+                statusCode: HttpStatus.NOT_FOUND,
+                message: ErrorMessages.VENDORS_NOT_FOUND,
                 success: false
             }, HttpStatus.NOT_FOUND);
         }

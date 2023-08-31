@@ -11,9 +11,12 @@ export const constants = {
 
 export const PRISMA_CLIENT = 'PrismaClient';
 
-export enum VendorStatus {
+export enum VendorStatusEnum {
     ACTIVE = 'ACTIVE',
     INACTIVE = 'INACTIVE',
+    DETAILS_SUBMISSION_INCOMPLETE = 'DETAILS_SUBMISSION_INCOMPLETE',
+    DETAILS_SUBMISSION_COMPLETED = 'DETAILS_SUBMISSION_COMPLETED',
+    REJECTED = "REJECTED"
 }
 
 export const tableNameConstants = {
@@ -28,7 +31,7 @@ export const swaggerConstants = {
 }
 
 export const errorMessages = {
-    
+    INVALID_CREDS: "Credentials are wrong",
     VENDOR_IS_NOT_REGISTERED: 'Vendor is not registered',
     EMAIL_ALREADY_EXIST: 'Email already exist',
     CATEGORY_NOT_FOUND: 'Category not found',

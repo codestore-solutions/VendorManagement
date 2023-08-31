@@ -1,7 +1,7 @@
 // update-vendor.dto.ts
 
 import { IsOptional, IsString, IsEnum } from 'class-validator';
-import { VendorStatus } from 'src/assets/constants';
+import { VendorStatusEnum } from 'src/assets/constants';
 import { ApiProperty } from '@nestjs/swagger';
 
 
@@ -31,8 +31,4 @@ export class UpdateVendorDto {
     @IsString()
     phone_number?: string;
 
-    @ApiProperty({ enum: VendorStatus, example: VendorStatus.ACTIVE })
-    @IsOptional()
-    @IsEnum(VendorStatus)
-    status?: VendorStatus;
 }
