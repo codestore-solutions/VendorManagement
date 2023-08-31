@@ -17,7 +17,9 @@ export default function Login() {
     const router = useRouter()
 
     if (session) {
-        router.replace('/vendor')
+        setTimeout(() => {
+            router.push('/')
+        }, 500)
     }
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -27,7 +29,7 @@ export default function Login() {
         setLoading(true)
         const { email, password } = values;
         const res = await signIn('credentials', {
-            callbackUrl: '/vendor',
+            callbackUrl: '/',
             email,
             password,
             redirect: false,

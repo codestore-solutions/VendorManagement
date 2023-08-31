@@ -8,6 +8,7 @@ import { useRouter } from 'next/router'
 import { signUpUser } from '@/httpServices/userService';
 import { SignUpFormFinalData } from '@/types';
 import { passwordValidationRegex } from '@/utils';
+import { businessAdminId } from '@/assets/constant';
 
 const { Option } = Select;
 
@@ -18,7 +19,6 @@ interface RegistrationValues {
 }
 
 export default function Registration() {
-
     const { data: session } = useSession()
     const router = useRouter()
 
@@ -31,7 +31,7 @@ export default function Registration() {
     const onFinish = async (values: SignUpFormFinalData) => {
         try {
             const { firstName, lastName, email, countryCode,
-                phoneNumber, businessAdminId, password, confirmPassword } = values;
+                phoneNumber, password, confirmPassword } = values;
 
             if (password !== confirmPassword) {
                 setErrorMessage('Passwords do not match');
@@ -49,7 +49,7 @@ export default function Registration() {
             await signUpUser({ 
                 firstName, lastName, 
                 email,
-                businessAdminId: 1,
+                businessAdminId: businessAdminId,
                 password,
                 phoneNumber,
                 countryCode

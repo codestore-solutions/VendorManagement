@@ -1,1 +1,5 @@
-export type verificationType = 'Verified' | 'Rejected' | 'Pending';
+export type verificationType = 'ACTIVE'
+| 'INACTIVE'
+| 'DETAILS_SUBMISSION_INCOMPLETE'
+| 'DETAILS_SUBMISSION_COMPLETED'
+| 'REJECTED';

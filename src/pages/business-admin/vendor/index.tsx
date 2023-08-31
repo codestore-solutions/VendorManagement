@@ -1,11 +1,12 @@
 import DataTable from "@/components/table";
 import fetchVendorColumns, { vendors } from "./components/column";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { InputRef } from 'antd';
 import type { FilterConfirmProps } from 'antd/es/table/interface';
 import SearchLayer from "@/components/searchlayer";
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/router";
+import { getVendorsOfBusinessAdmin } from "@/httpServices/businessAdminService";
 
 
 export interface VendorDataType {
@@ -24,7 +25,7 @@ export type VendorDataIndex = keyof VendorDataType;
 export default function () {
     const router = useRouter()
 
-    const { status } = useSession({
+    const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
             router.replace('/auth/signin')
@@ -48,10 +49,21 @@ export default function () {
         setSearchText('');
     };
 
-
     const goToAddVendor = () => {
         router.push('/business-admin/add-vendor')
     }
+
+    const [vendors, setVendors ] = useState([])
+    const fetchVendors = useCallback(async ()=>{
+        if(!session?.user.id) return null;
+        const { data } = await getVendorsOfBusinessAdmin(session?.user.id)
+        const data_: any = data.map((item: any, index: number) => ({ ...item , sno: index+1}));
+        setVendors(data_)
+    }, [session?.user.id])
+    
+    useEffect(()=>{
+        fetchVendors()
+    },[fetchVendors])
 
     return (
         <div>

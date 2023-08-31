@@ -6,10 +6,12 @@ const { Header } = Layout;
 
 
 interface navHeaderProps {
-    collapsed: boolean
+    collapsed: boolean;
+    email: string;
+    name: string;
 }
 
-const NavHeader:FC<navHeaderProps> = ({ collapsed }) => {
+const NavHeader:FC<navHeaderProps> = ({ collapsed, email, name }) => {
     return (
         <Header id="navbar" className={`flex justify-between 
             items-center bg-white py-8 ${collapsed ? 'pl-16':'pl-24'}`}>
@@ -39,9 +41,9 @@ const NavHeader:FC<navHeaderProps> = ({ collapsed }) => {
                         <Space className='flex flex-col items-start justify-center ml-1'>
                             <p className={`font-normal text-sm
                                         pr-2 text-[#000000] leading-none 
-                                        ${poppinFont.className}`}>Olivia Luca</p>
+                                        ${poppinFont.className}`}>{name}</p>
                             <p className={`font-light text-xs pr-2 text-[#7E8299] leading-none 
-                                        ${poppinFont.className}`}>olivia@gmail.com</p>
+                                        ${poppinFont.className}`}>{email}</p>
                         </Space>
 
                     </div>

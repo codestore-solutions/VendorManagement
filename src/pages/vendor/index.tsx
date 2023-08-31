@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { type InputRef } from 'antd';
 import type { FilterConfirmProps } from 'antd/es/table/interface';
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/router";
-import WelcomeBack from "@/components/vendor/welcome-back";
-import WelcomeBackModal from "@/components/modal";
+import { getVendorProfileStatus } from "@/httpServices/userService";
+import { VendorStatusEnum } from "@/assets/constant";
 
 
 export interface VendorDataType {
@@ -23,7 +23,7 @@ export type VendorDataIndex = keyof VendorDataType;
 export default function () {
     const router = useRouter()
 
-    const { status } = useSession({
+    const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
             router.replace('/auth/signin')
@@ -54,18 +54,20 @@ export default function () {
 
     const [openWelcomeModal, setOpenWelcomeModal] = useState(false)
 
-    useEffect(()=>{
-        setOpenWelcomeModal(true)
-    },[])
+    // useEffect(()=>{
+    //     getProfileStatus()
+    // },[])
+
+    // const getProfileStatus = useCallback(async () => {
+    //     const { data } = await getVendorProfileStatus(session?.user.id)
+    //     if(data.status === VendorStatusEnum.DETAILS_SUBMISSION_INCOMPLETE){
+    //         setOpenWelcomeModal(true)
+    //     }
+    // }, [])
 
     return (
         <>
-            <WelcomeBackModal
-                isOpen={openWelcomeModal} 
-                closeIcon={null}
-                children={<WelcomeBack onClickHandler={goToStepperForm}/>}
-                width={'60%'}
-                footerBtn={null}/>
+            <p className="text-xl">Work in progress</p>
         </>
     )
 }

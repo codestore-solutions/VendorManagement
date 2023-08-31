@@ -2,10 +2,12 @@ import { ReactElement, useEffect, useCallback, useState } from 'react';
 import CrumbAndSearchLayer from "@/components/searchlayer";
 import RegistrationStepper from '@/components/vendor/business-profile-stepper';
 import { useRouter } from 'next/router';
-import { CompanyInfoInterface } from '@/types';
-import { fetchVendorBusinessDetails, fetchVendorRegistrationProgress } from '@/httpServices/userService';
+import { fetchVendorBusinessDetails } from '@/httpServices/userService';
 import PageLevelLoader from '@/components/pageLoader';
-import { BASEURL } from '@/assets/constant';
+import moment from 'moment';
+import { generateFileObj } from '@/utils';
+import { businessAdminId } from '@/assets/constant';
+import { useSession } from 'next-auth/react';
 
 
 export default function UpdateBusinessProfile() {
@@ -15,61 +17,67 @@ export default function UpdateBusinessProfile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [businessData, setBusinessData] = useState()
-
+    const { data: session, status } = useSession({
+        required: true,
+        onUnauthenticated() {
+            router.replace('/auth/signin')
+        },
+    })
     const fetchFormStep = useCallback(async () => {
+        if(!session?.user.id) return null;
         try {
-            setError(null)
-            setLoading(true)
-            // const response = await fetchVendorRegistrationProgress(7);
-            const response = await await fetchVendorBusinessDetails(7);
+            setError(null);
+            setLoading(true);
+
+            const response = await fetchVendorBusinessDetails(session?.user.id);
             const { data } = response;
-            const { formStep: step, address, identityProof,
-                addressProof, businessRegCert, ...vendorBusinessData } = data
 
-            const identityProofObj = [{
-                name: 'identity proof',
-                url: `${BASEURL}/${identityProof}`
-            },]
+            const {
+                formStep: step,
+                address,
+                identityProof,
+                addressProof,
+                businessRegCert,
+                dateOfEstablishment,
+                ...vendorBusinessData
+            } = data;
 
-            const businessRegCertObj = [{
-                name: 'identity proof',
-                url: `${BASEURL}/${businessRegCert}`
-            },]
 
-            const addressProofObj = [{
-                name: 'identity proof',
-                url: `${BASEURL}/${addressProof}`
-            },]
+            const identityProofObj = identityProof ?[generateFileObj('Identity Proof', identityProof)]: null;
+            const businessRegCertObj =  businessRegCert ?[generateFileObj('Business Registration Certificate', businessRegCert)]: null;
+            const addressProofObj = addressProof ?[generateFileObj('Address Proof', addressProof)]: null;
 
-            if (address !== null) {
-                setBusinessData({
-                    ...address, ...vendorBusinessData,
-                    addressProof: addressProofObj,
-                    businessRegCert: businessRegCertObj, identityProof: identityProofObj
-                })
-            } else {
-                setBusinessData({
-                    ...vendorBusinessData, addressProof: addressProofObj,
-                    businessRegCert: businessRegCertObj, identityProof: identityProofObj
-                })
-            }
-            setFormStep(step)
-            console.log(vendorBusinessData)
-            setLoading(false)
+            const dateOfEstablishmentVal = dateOfEstablishment ? moment(dateOfEstablishment):
+                    dateOfEstablishment;
+
+            const updatedBusinessData = address !== null
+                ? { ...address, ...vendorBusinessData }
+                : { ...vendorBusinessData };
+
+            setBusinessData({
+                ...updatedBusinessData,
+                addressProof: addressProofObj,
+                businessRegCert: businessRegCertObj,
+                identityProof: identityProofObj,
+                dateOfEstablishment: dateOfEstablishmentVal,
+            });
+
+            setFormStep(step);
+            setLoading(false);
         } catch (error: any) {
-            if (error && error.message) {
-                setError(error?.message)
+            if (error?.message) {
+                setError(error.message);
             } else {
-                setError("This could be due to a network problem, a temporary disruption, or issues with your device's connectivity, plz try again!!")
+                setError('An error occurred. Please try again later.');
             }
-            setLoading(false)
+            setLoading(false);
         }
-    }, [])
+    }, [session?.user.id]);
 
 
     useEffect(() => {
         fetchFormStep()
-    }, [])
+    }, [fetchFormStep])
 
     const goBack = () => {
         router.back();
@@ -88,13 +96,14 @@ export default function UpdateBusinessProfile() {
                 breadcrumbItems={[{ title: 'Vendor Management' }]}
                 addTooltipText="Add vendor" />
 
-            {formStep &&
+            {(formStep && formStep < 5) &&
                 <RegistrationStepper
                     formStep={formStep}
                     businessData={businessData} />}
             <PageLevelLoader
                 loader={loading}
                 error={error}
+                success={formStep === 5}
                 onRetry={onRefresh} />
         </>
     )

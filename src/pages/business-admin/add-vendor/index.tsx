@@ -28,6 +28,7 @@ export default function AddVendor() {
     return (
         <div>
             <CrumbAndSearchLayer
+                mode="list"
                 searchbar={false}
                 breadcrumbItems={[{ title: 'Vendor Management' }]}
                 goBack={goBack} />

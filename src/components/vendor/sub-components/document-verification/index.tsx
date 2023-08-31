@@ -1,10 +1,9 @@
 import { Form, Upload } from "antd";
-import { InboxOutlined, UploadOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined } from '@ant-design/icons';
 
 export default function () {
 
     const normFile = (e: any) => {
-        console.log('Upload event:', e);
         if (Array.isArray(e)) {
             return e;
         }
@@ -20,6 +19,7 @@ export default function () {
                 <Form.Item
                     name="businessRegCert"
                     valuePropName="fileList"
+                    getValueFromEvent={normFile}
                     noStyle>
                     <Upload
                         listType="picture-card" maxCount={1} className="w-32">
@@ -37,6 +37,7 @@ export default function () {
             <Form.Item label="Identity Proof" className="px-2 w-full lg:w-1/3">
                 <Form.Item name="identityProof"
                     valuePropName="fileList"
+                    getValueFromEvent={normFile}
                     noStyle>
                     <Upload
                         name="identityProof"
@@ -54,7 +55,8 @@ export default function () {
 
             <Form.Item label="Address Proof" className="px-2 w-full lg:w-1/3">
                 <Form.Item name="addressProof"
-                    valuePropName="fileList"    
+                    valuePropName="fileList" 
+                    getValueFromEvent={normFile}   
                     noStyle>
                     <Upload
                         listType="picture-card" maxCount={1} className="w-32">

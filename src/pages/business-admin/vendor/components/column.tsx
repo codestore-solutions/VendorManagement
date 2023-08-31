@@ -6,6 +6,9 @@ import { poppinFont } from '@/assets/fonts';
 import { getColumnSearchProps } from '@/components/searchbar/table';
 import { VendorDataType } from '..';
 import { Button, Popconfirm } from 'antd';
+import moment from 'moment';
+import { VendorStatusEnum } from '@/assets/constant';
+import Link from 'next/link';
 
 
 interface Columnprops {
@@ -31,8 +34,8 @@ export default function fetchVendorColumns({
         },
         {
             title: 'Vendor name',
-            dataIndex: 'vendorName',
-            width: '25%',
+            dataIndex: 'firstName',
+            width: '20%',
             render: (value) => (
                 <span className="font-medium text-sm text-[#000000]">
                     {value}
@@ -40,34 +43,34 @@ export default function fetchVendorColumns({
         },
         {
             title: 'Mobile Number',
-            dataIndex: 'mobileNumber',
+            dataIndex: 'phoneNumber',
             width: '18%',
             render: (value) => (
                 <span className="font-medium text-sm text-[#000000]">
                     {value}
                 </span>)
         },
-        {
-            title: 'Email',
-            dataIndex: 'email',
-            ...getColumnSearchProps('email',
-                searchInput, handleSearch,
-                handleReset, 'font-normal text-sm text-[#000000]'),
+        // {
+        //     title: 'Email',
+        //     dataIndex: 'email',
+        //     ...getColumnSearchProps('email',
+        //         searchInput, handleSearch,
+        //         handleReset, 'font-normal text-sm text-[#000000]'),
 
-        },
+        // },
         {
             title: 'Joining date',
-            width: '14%',
-            dataIndex: 'joiningDate',
+            width: '30%',
+            dataIndex: 'createdAt',
             render: (value) => (
                 <span className="font-normal text-sm text-[#000000]">
-                    {value}
+                    {moment(value).format('MMMM Do YYYY, h:mm:ss a')}
                 </span>)
         },
         {
             title: 'Verification Status',
             width: '25%',
-            dataIndex: 'verificationStatus',
+            dataIndex: 'status',
             filters: [
                 {
                     text: 'Verified',
@@ -87,7 +90,7 @@ export default function fetchVendorColumns({
                 <Tag
                     color={getColorForVerificationState(status)}
                     className={`${poppinFont.className} font-light text-sm`}>
-                    {status}
+                    {VendorStatusEnum[status]}
                 </Tag>
             ),
         },
@@ -95,11 +98,15 @@ export default function fetchVendorColumns({
             title: 'Action',
             key: 'action',
             fixed: 'right',
-            render: () => (
+            dataIndex: 'id',
+            render: (value) => (
                 <div className='flex'>
-                    <button className='mr-1 w-6'>
-                        <img src='/svgs/eye.svg' />
-                    </button>
+                    <Link href={`/business-admin/vendor/${value}`}>
+                        <button className='mr-1 w-6'>
+                            <img src='/svgs/eye.svg' />
+                        </button>
+                    </Link>
+
                     <Popconfirm
                         title="Reject vendor"
                         description="Are you sure to reject this vendor?"
